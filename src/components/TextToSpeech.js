@@ -1,4 +1,4 @@
-// src/components/TextToSpeech.js - Fixed Freezing Issue
+// src/components/TextToSpeech.js - Fixed with Pronunciation Improvements
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
 const TextToSpeech = ({ text, fileName }) => {
@@ -31,8 +31,8 @@ const TextToSpeech = ({ text, fileName }) => {
   const timeoutRef = useRef(null);
   const utteranceRef = useRef(null);
 
-  const MAX_CHUNK = 1000; // Reduced from 2000 to prevent freezing
-  const DELAY_BETWEEN_CHUNKS = 500; // Increased for stability
+  const MAX_CHUNK = 1500; // Balanced for performance
+  const DELAY_BETWEEN_CHUNKS = 300;
 
   // Available languages
   const languages = [
@@ -57,6 +57,267 @@ const TextToSpeech = ({ text, fileName }) => {
     { code: "id-ID", name: "Indonesian" },
     { code: "ms-MY", name: "Malay" },
   ];
+
+  // ====== PRONUNCIATION FIXES ======
+  const pronunciationFixes = {
+    // Silent letters - Psychology words
+    psychology: "sy-kol-uh-jee",
+    psycho: "sy-ko",
+    psychic: "sy-kik",
+    psychologist: "sy-kol-uh-jist",
+    psychiatry: "sy-ky-uh-tree",
+    psychiatric: "sy-ky-at-rik",
+    psychoanalysis: "sy-ko-uh-nal-uh-sis",
+
+    // Silent P
+    pneumonia: "noo-moh-nyuh",
+    pneumatic: "noo-mat-ik",
+    pterodactyl: "ter-uh-dak-til",
+    ptolemy: "tol-uh-mee",
+    ptomaine: "toh-mayn",
+
+    // Silent G
+    gnome: "nome",
+    gnat: "nat",
+    gnu: "noo",
+    gnash: "nash",
+    gneiss: "nice",
+    gnostic: "nos-tik",
+
+    // Silent K
+    knight: "nite",
+    knife: "nife",
+    know: "no",
+    knee: "nee",
+    kneel: "neel",
+    knew: "noo",
+    knit: "nit",
+    knob: "nob",
+    knock: "nok",
+    knot: "not",
+    knowledge: "nol-ij",
+    knuckle: "nuk-uhl",
+
+    // Silent W
+    write: "rite",
+    wrong: "rong",
+    wrist: "rist",
+    wrap: "rap",
+    wreck: "rek",
+    wrestle: "res-uhl",
+    wriggle: "rig-uhl",
+    wrinkle: "rink-uhl",
+    wrath: "rath",
+    wreath: "reeth",
+
+    // Contractions - Common
+    "we're": "weer",
+    "you're": "yoor",
+    "they're": "thair",
+    "we'll": "weel",
+    "you'll": "yool",
+    "they'll": "thail",
+    "we've": "weev",
+    "you've": "yoov",
+    "they've": "thaiv",
+    "i'm": "ahym",
+    "i'll": "ahyl",
+    "i've": "ahyv",
+    "i'd": "ahyd",
+    "he's": "heez",
+    "she's": "sheez",
+    "it's": "its",
+    "that's": "thats",
+    "what's": "wuts",
+    "who's": "hooz",
+    "where's": "wairz",
+    "when's": "wenz",
+    "why's": "wyz",
+    "how's": "houz",
+
+    // Common words - Correct pronunciation
+    the: "thuh",
+    a: "uh",
+    an: "un",
+    and: "and",
+    for: "for",
+    are: "ar",
+    with: "with",
+    has: "haz",
+    have: "hav",
+    does: "duz",
+    was: "wuz",
+    were: "wur",
+    been: "bin",
+    one: "wun",
+    two: "too",
+    four: "for",
+    your: "yor",
+    our: "owr",
+    their: "thair",
+    there: "thair",
+    they: "thay",
+    them: "them",
+    these: "theez",
+    those: "thoz",
+    because: "buh-kawz",
+    enough: "ih-nuhf",
+    through: "throo",
+    though: "tho",
+    thought: "thawt",
+    throughout: "throo-out",
+    country: "kuhn-tree",
+    couple: "kuhp-uhl",
+    young: "yung",
+    rough: "ruhf",
+    tough: "tuhf",
+    cough: "kawf",
+    thorough: "thur-oh",
+    bough: "bow",
+    colonel: "kernel",
+    comfortable: "kuhmf-tuh-bul",
+    interesting: "in-tres-ting",
+    literally: "lit-er-uh-lee",
+    probably: "prob-uh-blee",
+    necessarily: "nes-uh-sair-uh-lee",
+    particularly: "par-tik-yuh-ler-lee",
+    regularly: "reg-yuh-ler-lee",
+    usually: "yoo-zhoo-uh-lee",
+    eventually: "ih-ven-choo-uh-lee",
+    actually: "ak-choo-uh-lee",
+    naturally: "nach-er-uh-lee",
+    obviously: "ob-vee-uhs-lee",
+
+    // Numbers
+    0: "zero",
+    1: "one",
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+    10: "ten",
+    11: "eleven",
+    12: "twelve",
+    13: "thirteen",
+    14: "fourteen",
+    15: "fifteen",
+    16: "sixteen",
+    17: "seventeen",
+    18: "eighteen",
+    19: "nineteen",
+    20: "twenty",
+    30: "thirty",
+    40: "forty",
+    50: "fifty",
+    60: "sixty",
+    70: "seventy",
+    80: "eighty",
+    90: "ninety",
+    100: "one hundred",
+    1000: "one thousand",
+  };
+
+  // ====== PREPROCESS TEXT FOR PRONUNCIATION ======
+  const preprocessText = useCallback((text) => {
+    if (!text) return "";
+
+    let processed = text;
+
+    // Replace words with pronunciation fixes (case insensitive, whole word only)
+    for (const [word, replacement] of Object.entries(pronunciationFixes)) {
+      const regex = new RegExp(`\\b${word}\\b`, "gi");
+      processed = processed.replace(regex, replacement);
+    }
+
+    // Fix abbreviations
+    processed = processed
+      .replace(/\bDr\.?\b/gi, "Doctor")
+      .replace(/\bMr\.?\b/gi, "Mister")
+      .replace(/\bMrs\.?\b/gi, "Missus")
+      .replace(/\bMs\.?\b/gi, "Miss")
+      .replace(/\bSt\.?\b/gi, "Saint")
+      .replace(/\bAve\.?\b/gi, "Avenue")
+      .replace(/\bRd\.?\b/gi, "Road")
+      .replace(/\bBlvd\.?\b/gi, "Boulevard")
+      .replace(/\bJr\.?\b/gi, "Junior")
+      .replace(/\bSr\.?\b/gi, "Senior")
+      .replace(/\bvs\.?\b/gi, "versus")
+      .replace(/\betc\.?\b/gi, "et cetera")
+      .replace(/\bapprox\.?\b/gi, "approximately");
+
+    // Fix common acronyms
+    processed = processed
+      .replace(/\bUSA\b/g, "U S A")
+      .replace(/\bUK\b/g, "U K")
+      .replace(/\bAI\b/g, "A I")
+      .replace(/\bPDF\b/g, "P D F")
+      .replace(/\bHTML\b/g, "H T M L")
+      .replace(/\bCSS\b/g, "C S S")
+      .replace(/\bAPI\b/g, "A P I")
+      .replace(/\bURL\b/g, "U R L")
+      .replace(/\bHTTP\b/g, "H T T P")
+      .replace(/\bHTTPS\b/g, "H T T P S");
+
+    return processed;
+  }, []);
+
+  // ====== GET BEST VOICE ======
+  const getBestVoice = useCallback(() => {
+    const availableVoices = window.speechSynthesis.getVoices();
+    if (availableVoices.length === 0) return null;
+
+    // Priority order for best voices
+    const preferredVoices = [
+      "Google UK English Female",
+      "Google US English Female",
+      "Google UK English Male",
+      "Google US English Male",
+      "Microsoft Zira Desktop",
+      "Microsoft David Desktop",
+      "Microsoft Hazel Desktop",
+      "Samantha", // Mac
+      "Alex", // Mac
+      "Victoria", // Mac
+      "Daniel", // Mac
+      "Google español",
+      "Google français",
+      "Google Deutsch",
+      "Google italiano",
+      "Google português",
+      "Google русский",
+    ];
+
+    // Try to find a preferred voice
+    for (const preferred of preferredVoices) {
+      const voice = availableVoices.find((v) => v.name.includes(preferred));
+      if (voice) {
+        console.log("🎤 Using voice:", voice.name);
+        return voice;
+      }
+    }
+
+    // Fallback to any voice matching the selected language
+    const langVoice = availableVoices.find((v) => v.lang === selectedLanguage);
+    if (langVoice) {
+      console.log("🎤 Using language voice:", langVoice.name);
+      return langVoice;
+    }
+
+    // Fallback to any English voice
+    const englishVoice = availableVoices.find((v) => v.lang.startsWith("en"));
+    if (englishVoice) {
+      console.log("🎤 Using English voice:", englishVoice.name);
+      return englishVoice;
+    }
+
+    // Last resort
+    console.log("🎤 Using default voice:", availableVoices[0]?.name);
+    return availableVoices[0];
+  }, [selectedLanguage]);
 
   // Parse text into pages
   useEffect(() => {
@@ -101,7 +362,6 @@ const TextToSpeech = ({ text, fileName }) => {
   // Clean text for speech
   const cleanTextForSpeech = useCallback((text) => {
     if (!text) return "";
-    // Remove page markers and clean up whitespace
     return text
       .replace(/Page \d+:/g, "")
       .replace(/\s+/g, " ")
@@ -112,8 +372,9 @@ const TextToSpeech = ({ text, fileName }) => {
   useEffect(() => {
     const selected = getSelectedText();
     const cleaned = cleanTextForSpeech(selected);
-    setProcessedText(cleaned);
-  }, [getSelectedText, cleanTextForSpeech]);
+    const preprocessed = preprocessText(cleaned);
+    setProcessedText(preprocessed);
+  }, [getSelectedText, cleanTextForSpeech, preprocessText]);
 
   // ====== SAVE PROGRESS TO LOCAL STORAGE ======
   const saveProgress = useCallback(
@@ -185,23 +446,11 @@ const TextToSpeech = ({ text, fileName }) => {
         const availableVoices = window.speechSynthesis.getVoices();
         setVoices(availableVoices);
         if (availableVoices.length > 0) {
-          setSelectedVoice((prev) => {
-            if (prev) return prev;
-            const preferred = availableVoices.find(
-              (v) =>
-                v.name.includes("Google") ||
-                v.name.includes("Microsoft") ||
-                v.name.includes("Samantha") ||
-                v.name.includes("Alex") ||
-                v.name.includes("Aria") ||
-                v.name.includes("David") ||
-                v.name.includes("Zira"),
-            );
-            const englishVoice = availableVoices.find((v) =>
-              v.lang.startsWith("en"),
-            );
-            return preferred || englishVoice || availableVoices[0];
-          });
+          const bestVoice = getBestVoice();
+          if (bestVoice) {
+            setSelectedVoice(bestVoice);
+            currentVoiceRef.current = bestVoice;
+          }
           setIsReady(true);
         }
       } catch (e) {
@@ -231,16 +480,14 @@ const TextToSpeech = ({ text, fileName }) => {
       window.speechSynthesis.onvoiceschanged = null;
       clearTimeout(fallbackTimeout);
       isMountedRef.current = false;
-      // Clean up any ongoing speech
       window.speechSynthesis.cancel();
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
     };
-  }, [isReady]);
+  }, [getBestVoice, isReady]);
 
   const handleVoiceChange = useCallback((voice) => {
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
     isSpeakingRef.current = false;
@@ -281,14 +528,9 @@ const TextToSpeech = ({ text, fileName }) => {
     }
   }, []);
 
-  // ====== PROCESS QUEUE - FIXED FOR STABILITY ======
+  // ====== PROCESS QUEUE ======
   const processQueue = useCallback(() => {
-    // Prevent multiple simultaneous processing
-    if (isProcessingRef.current) {
-      return;
-    }
-
-    // Check if there are chunks to process
+    if (isProcessingRef.current) return;
     if (speechQueueRef.current.length === 0) {
       setIsSpeaking(false);
       isSpeakingRef.current = false;
@@ -298,29 +540,23 @@ const TextToSpeech = ({ text, fileName }) => {
       return;
     }
 
-    // Make sure audio context is active
     ensureAudioContext();
-
-    // Get next chunk
     isProcessingRef.current = true;
     const chunk = speechQueueRef.current.shift();
 
-    // Validate chunk
     if (!chunk || chunk.trim().length === 0) {
       isProcessingRef.current = false;
-      // Skip empty chunks
       setTimeout(() => processQueue(), 100);
       return;
     }
 
-    // Create utterance
     const utterance = new SpeechSynthesisUtterance(chunk);
     utterance.rate = Math.min(Math.max(speechRate, 0.5), 2);
     utterance.pitch = Math.min(Math.max(speechPitch, 0.5), 2);
     utterance.volume = 1;
 
-    // Set voice
-    const voiceToUse = currentVoiceRef.current || selectedVoice;
+    // Use best voice
+    const voiceToUse = currentVoiceRef.current || getBestVoice();
     if (voiceToUse) {
       utterance.voice = voiceToUse;
       utterance.lang = voiceToUse.lang;
@@ -328,10 +564,8 @@ const TextToSpeech = ({ text, fileName }) => {
       utterance.lang = selectedLanguage || "en-US";
     }
 
-    // Store reference to prevent garbage collection
     utteranceRef.current = utterance;
 
-    // Set up event handlers
     utterance.onstart = () => {
       setIsSpeaking(true);
       isSpeakingRef.current = true;
@@ -340,7 +574,6 @@ const TextToSpeech = ({ text, fileName }) => {
     };
 
     utterance.onend = () => {
-      // Only proceed if component is still mounted
       if (!isMountedRef.current) return;
 
       const total = totalChunks || speechQueueRef.current.length + 1;
@@ -351,16 +584,13 @@ const TextToSpeech = ({ text, fileName }) => {
       setCurrentChunkIndex(done);
       saveProgress(done, progressPercent, total);
 
-      // Reset processing flag
       isProcessingRef.current = false;
 
-      // Schedule next chunk with delay
       if (speechQueueRef.current.length > 0) {
         timeoutRef.current = setTimeout(() => {
           processQueue();
         }, DELAY_BETWEEN_CHUNKS);
       } else {
-        // All chunks done
         setIsSpeaking(false);
         isSpeakingRef.current = false;
         setProgress(100);
@@ -369,11 +599,7 @@ const TextToSpeech = ({ text, fileName }) => {
     };
 
     utterance.onerror = (event) => {
-      console.error("Speech error:", event.error);
-
-      // Handle different error types
       if (event.error === "interrupted" || event.error === "canceled") {
-        // User canceled - clean up
         speechQueueRef.current = [];
         setIsSpeaking(false);
         isSpeakingRef.current = false;
@@ -384,7 +610,6 @@ const TextToSpeech = ({ text, fileName }) => {
         return;
       }
 
-      // For other errors, try to continue with next chunk
       isProcessingRef.current = false;
       if (speechQueueRef.current.length > 0) {
         setTimeout(() => processQueue(), 500);
@@ -395,27 +620,21 @@ const TextToSpeech = ({ text, fileName }) => {
       }
     };
 
-    // Speak the utterance
     try {
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.error("Failed to speak:", e);
       isProcessingRef.current = false;
-      setError("Failed to start speech synthesis. Please try again.");
-
-      // Try to recover
-      if (speechQueueRef.current.length > 0) {
-        setTimeout(() => processQueue(), 1000);
-      }
+      setError("Failed to start speech synthesis.");
     }
   }, [
-    selectedVoice,
     speechRate,
     speechPitch,
     totalChunks,
     saveProgress,
     ensureAudioContext,
     selectedLanguage,
+    getBestVoice,
   ]);
 
   // ====== INITIALIZE AUDIO ======
@@ -423,7 +642,6 @@ const TextToSpeech = ({ text, fileName }) => {
     if (audioInitialized) return;
 
     try {
-      // Resume audio context
       if (
         audioContextRef.current &&
         audioContextRef.current.state === "suspended"
@@ -431,7 +649,6 @@ const TextToSpeech = ({ text, fileName }) => {
         audioContextRef.current.resume();
       }
 
-      // Test speech synthesis
       const testUtterance = new SpeechSynthesisUtterance(" ");
       testUtterance.volume = 0;
       testUtterance.onend = () => {
@@ -440,7 +657,6 @@ const TextToSpeech = ({ text, fileName }) => {
       };
       window.speechSynthesis.speak(testUtterance);
 
-      // Fallback: if onend doesn't fire
       setTimeout(() => {
         if (!audioInitialized) {
           setAudioInitialized(true);
@@ -453,24 +669,21 @@ const TextToSpeech = ({ text, fileName }) => {
     }
   }, [audioInitialized]);
 
-  // ====== SPEAK FUNCTION - FIXED ======
+  // ====== SPEAK FUNCTION ======
   const speak = useCallback(() => {
-    // If audio not initialized, initialize it first
     if (!audioInitialized) {
       initializeAudio();
-      // Wait a moment then try again
       setTimeout(() => {
         speak();
       }, 500);
       return;
     }
 
-    // Get the text to speak
-    let textToSpeak = processedText || cleanTextForSpeech(getSelectedText());
+    let textToSpeak =
+      processedText || preprocessText(cleanTextForSpeech(getSelectedText()));
 
-    // Fallback: if still empty, try using the original text
     if (!textToSpeak || textToSpeak.length === 0) {
-      textToSpeak = cleanTextForSpeech(text);
+      textToSpeak = preprocessText(cleanTextForSpeech(text));
     }
 
     if (!textToSpeak || textToSpeak.length === 0) {
@@ -483,7 +696,6 @@ const TextToSpeech = ({ text, fileName }) => {
       return;
     }
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -494,7 +706,6 @@ const TextToSpeech = ({ text, fileName }) => {
     isProcessingRef.current = false;
     speechQueueRef.current = [];
 
-    // Clean the text
     const cleanText = textToSpeak.replace(/\s+/g, " ").trim();
 
     if (cleanText.length === 0) {
@@ -502,11 +713,9 @@ const TextToSpeech = ({ text, fileName }) => {
       return;
     }
 
-    // Split into smaller chunks for stability
     const chunks = [];
     for (let i = 0; i < cleanText.length; i += MAX_CHUNK) {
       let chunk = cleanText.substring(i, i + MAX_CHUNK);
-      // Try to break at sentence boundaries for better flow
       const lastPeriod = chunk.lastIndexOf(".");
       const lastQuestion = chunk.lastIndexOf("?");
       const lastExclamation = chunk.lastIndexOf("!");
@@ -517,7 +726,6 @@ const TextToSpeech = ({ text, fileName }) => {
         i + lastBreak < cleanText.length - 50
       ) {
         chunk = chunk.substring(0, lastBreak + 1);
-        // Adjust i to not double-count
         i = i + lastBreak;
       }
 
@@ -526,7 +734,6 @@ const TextToSpeech = ({ text, fileName }) => {
 
     setTotalChunks(chunks.length);
 
-    // Check for saved progress
     const savedIndex = loadProgress();
     if (savedIndex > 0 && savedIndex < chunks.length) {
       speechQueueRef.current = chunks.slice(savedIndex);
@@ -544,7 +751,6 @@ const TextToSpeech = ({ text, fileName }) => {
 
     ensureAudioContext();
 
-    // Start processing the queue with a delay
     setTimeout(() => {
       processQueue();
     }, 300);
@@ -552,6 +758,7 @@ const TextToSpeech = ({ text, fileName }) => {
     processedText,
     getSelectedText,
     cleanTextForSpeech,
+    preprocessText,
     isReady,
     processQueue,
     ensureAudioContext,
@@ -955,7 +1162,7 @@ const TextToSpeech = ({ text, fileName }) => {
             ✅ 100% Free - No API Keys!
           </span>
           <span className="block text-blue-500 text-xs">
-            💡 1000 characters per chunk
+            💡 1500 characters per chunk
           </span>
           <span className="block text-yellow-500 text-xs">
             ⏸️ Progress is saved automatically!
