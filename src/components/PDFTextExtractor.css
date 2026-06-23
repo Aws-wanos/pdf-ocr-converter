@@ -1,0 +1,317 @@
+.pdf-text-extractor {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 30px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-text-extractor h2 {
+  margin-top: 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.upload-area:hover {
+  border-color: #4a90d9;
+  background: #f5f8ff;
+}
+
+.upload-prompt .upload-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.upload-prompt h3 {
+  margin: 10px 0 5px;
+  color: #333;
+}
+
+.upload-prompt p {
+  color: #666;
+  margin: 5px 0;
+}
+
+.file-limit {
+  font-size: 12px;
+  color: #999;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.file-icon {
+  font-size: 32px;
+}
+
+.file-details {
+  flex: 1;
+  text-align: left;
+}
+
+.file-name {
+  margin: 0;
+  font-weight: 500;
+  color: #333;
+  word-break: break-word;
+}
+
+.file-size {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.remove-file {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  padding: 0 10px;
+  transition: color 0.2s;
+}
+
+.remove-file:hover:not(:disabled) {
+  color: #e74c3c;
+}
+
+.remove-file:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.extraction-options {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.extraction-options label {
+  font-weight: 500;
+  color: #333;
+}
+
+.extraction-options select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  flex: 1;
+  max-width: 300px;
+}
+
+.extraction-options select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.extract-button {
+  width: 100%;
+  padding: 14px;
+  background: #4a90d9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-bottom: 20px;
+}
+
+.extract-button:hover {
+  background: #357abd;
+}
+
+.progress-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.progress-bar {
+  background: #e0e0e0;
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-info {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.processing-hint {
+  text-align: center;
+  color: #888;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.error-message {
+  margin: 15px 0;
+  padding: 12px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  color: #c33;
+}
+
+.extracted-text-container {
+  margin-top: 25px;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.text-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.text-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.text-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-button {
+  padding: 6px 14px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  color: #333;
+}
+
+.action-button:hover {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+
+.text-content {
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+  background: #fafafa;
+}
+
+.text-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.text-content .empty-text {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  padding: 30px;
+}
+
+.extraction-method-info {
+  padding: 10px 20px;
+  background: #f0f7ff;
+  border-top: 1px solid #e8e8e8;
+  font-size: 12px;
+  color: #666;
+}
+
+/* Scrollbar styling */
+.text-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.text-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.text-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.text-content::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .pdf-text-extractor {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .text-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .text-actions {
+    justify-content: center;
+  }
+  
+  .extraction-options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .extraction-options select {
+    max-width: 100%;
+  }
+}
